@@ -1,0 +1,63 @@
+{
+  "success": true,
+  "metrics": {
+    "posture": {
+      "average_shoulder_alignment": 0.8567499802993225,
+      "average_back_straightness": 0.000034599180694098944,
+      "stability_score": 0.9685066158541481,
+      "confidence_score": 0.4152503280220805,
+      "feedback": [
+        "Maintain a straight back with shoulders over hips.",
+        "Open up your posture - keep your shoulders back and chest open."
+      ]
+    },
+    "eye_contact": {
+      "eye_contact_percentage": 100,
+      "average_eye_contact_duration": 0,
+      "gaze_shifts_per_minute": 0,
+      "direct_eye_contact_score": 1,
+      "feedback": [
+        "Your eye contact durations are brief. Practice holding eye contact longer."
+      ]
+    },
+    "voice_quality": {
+      "average_volume": -21.29814910888672,
+      "volume_consistency": 0.4995568630064722,
+      "clarity_score": 0.3268118016822966,
+      "pitch_range": 3821.16943359375,
+      "average_pitch": 510.1299133300781,
+      "voice_stability": 0.07010303764497608,
+      "feedback": [
+        "Your volume varies significantly. Practice maintaining consistent volume.",
+        "Work on enunciating clearly. Practice speaking more deliberately.",
+        "Your pitch varies a lot. Work on maintaining a more stable voice."
+      ]
+    },
+    "speech_disfluencies": {
+      "stutter_count": 0,
+      "filler_word_count": 0,
+      "pause_count": 37,
+      "total_disfluencies": 0,
+      "disfluency_rate": 0,
+      "speech_rate": 0,
+      "feedback": [
+        "Great speech! Minimal disfluencies and good pacing."
+      ]
+    },
+    "intonation": {
+      "pitch_variation": 1,
+      "stress_pattern_score": 0.2553139506474469,
+      "monotone_score": 0,
+      "energy_variation": 1,
+      "prosody_score": 0.7765941851942341,
+      "feedback": [
+        "Work on creating clearer stress patterns. Emphasize key words and phrases."
+      ]
+    }
+  },
+  "overall_score": 75.17,
+  "feedback": [
+    "Your volume varies significantly. Practice maintaining consistent volume throughout your speech.",
+    "Work on enunciating clearly. Practice speaking more deliberately."
+  ]
+}

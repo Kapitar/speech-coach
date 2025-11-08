@@ -1,0 +1,15 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+pydantic==2.5.0
+opencv-python==4.8.1.78
+mediapipe==0.10.21
+moviepy==1.0.3
+librosa==0.10.1
+soundfile==0.12.1
+numpy>=1.24.3
+scipy>=1.11.4
+SpeechRecognition==3.10.0
+pydub==0.25.1
+Pillow>=10.1.0
+setuptools>=65.0.0

@@ -1,0 +1,62 @@
+{
+  "success": true,
+  "metrics": {
+    "posture": {
+      "average_shoulder_alignment": 0.9245706319529126,
+      "average_back_straightness": 0,
+      "stability_score": 0.9650172599614297,
+      "confidence_score": 0.6258831582438777,
+      "feedback": [
+        "Maintain a straight back with shoulders over hips."
+      ]
+    },
+    "eye_contact": {
+      "eye_contact_percentage": 100,
+      "average_eye_contact_duration": 0,
+      "gaze_shifts_per_minute": 0,
+      "direct_eye_contact_score": 1,
+      "feedback": [
+        "Your eye contact durations are brief. Practice holding eye contact longer."
+      ]
+    },
+    "voice_quality": {
+      "average_volume": -18.092342376708984,
+      "volume_consistency": 0.5101047168836996,
+      "clarity_score": 0.4639271510301005,
+      "pitch_range": 3832.22802734375,
+      "average_pitch": 474.03729248046875,
+      "voice_stability": 0.03457512053757728,
+      "feedback": [
+        "Your volume varies significantly. Practice maintaining consistent volume.",
+        "Work on enunciating clearly. Practice speaking more deliberately.",
+        "Your pitch varies a lot. Work on maintaining a more stable voice."
+      ]
+    },
+    "speech_disfluencies": {
+      "stutter_count": 0,
+      "filler_word_count": 0,
+      "pause_count": 42,
+      "total_disfluencies": 0,
+      "disfluency_rate": 0,
+      "speech_rate": 0,
+      "feedback": [
+        "Great speech! Minimal disfluencies and good pacing."
+      ]
+    },
+    "intonation": {
+      "pitch_variation": 1,
+      "stress_pattern_score": 0.27505532722099274,
+      "monotone_score": 0,
+      "energy_variation": 1,
+      "prosody_score": 0.7825165981662978,
+      "feedback": [
+        "Work on creating clearer stress patterns. Emphasize key words and phrases."
+      ]
+    }
+  },
+  "overall_score": 76.79,
+  "feedback": [
+    "Your volume varies significantly. Practice maintaining consistent volume throughout your speech.",
+    "Work on enunciating clearly. Practice speaking more deliberately."
+  ]
+}
