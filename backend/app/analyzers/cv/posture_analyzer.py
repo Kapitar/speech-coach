@@ -50,16 +50,38 @@ class PostureAnalyzer:
                     right_hip = landmarks[self.mp_pose.PoseLandmark.RIGHT_HIP]
                     nose = landmarks[self.mp_pose.PoseLandmark.NOSE]
                     
+                    # Only calculate if key landmarks are visible
+                    if not (left_shoulder.visibility > 0.5 and right_shoulder.visibility > 0.5 and
+                           left_hip.visibility > 0.5 and right_hip.visibility > 0.5):
+                        continue  # Skip this frame if landmarks not visible
+                    
                     # Calculate shoulder alignment (should be level)
                     shoulder_height_diff = abs(left_shoulder.y - right_shoulder.y)
                     shoulder_alignment = 1.0 - min(shoulder_height_diff * 10, 1.0)
                     shoulder_alignments.append(shoulder_alignment)
                     
                     # Calculate back straightness (shoulders and hips should be aligned)
+                    # For a person standing straight, shoulders should be above hips
+                    # Normal difference in MediaPipe coordinates is about 0.15-0.25
                     shoulder_center_y = (left_shoulder.y + right_shoulder.y) / 2
                     hip_center_y = (left_hip.y + right_hip.y) / 2
                     vertical_alignment = abs(shoulder_center_y - hip_center_y)
-                    back_straightness = 1.0 - min(vertical_alignment * 5, 1.0)
+                    
+                    # Expected difference for good posture (shoulders above hips)
+                    expected_diff = 0.2
+                    
+                    # Score is high when alignment is close to expected difference
+                    # Allow some tolerance (0.1 to 0.3 is reasonable)
+                    if 0.1 <= vertical_alignment <= 0.3:
+                        # Good alignment - score based on how close to expected
+                        back_straightness = 1.0 - abs(vertical_alignment - expected_diff) * 2
+                    elif vertical_alignment < 0.1:
+                        # Too close (might be slouching or bad detection)
+                        back_straightness = vertical_alignment * 5
+                    else:
+                        # Too far apart (bad posture or detection issue)
+                        back_straightness = max(0.0, 1.0 - (vertical_alignment - 0.3) * 2)
+                    
                     back_straightness_scores.append(back_straightness)
                     
                     # Calculate stability (how much the person moves)

@@ -35,7 +35,9 @@ class VoiceAnalyzer:
             for t in range(pitches.shape[1]):
                 index = magnitudes[:, t].argmax()
                 pitch = pitches[index, t]
-                if pitch > 0:
+                # Filter out unrealistic pitches (human voice is typically 50-500 Hz)
+                # This filters out harmonics and noise
+                if pitch > 0 and 50 <= pitch <= 500:
                     pitch_values.append(pitch)
             
             if pitch_values:

@@ -65,16 +65,31 @@ class SpeechAnalyzer:
     def transcribe_audio(self, audio_path: str) -> str:
         """Transcribe audio to text"""
         try:
+            # Check if audio file exists and has content
+            file_size = os.path.getsize(audio_path)
+            if file_size < 1000:  # Less than 1KB is suspicious
+                print(f"Warning: Audio file is very small ({file_size} bytes)")
+            
             with sr.AudioFile(audio_path) as source:
+                # Adjust for ambient noise to improve recognition
+                self.recognizer.adjust_for_ambient_noise(source, duration=0.5)
                 audio = self.recognizer.record(source)
+                
+                # Try transcription
                 text = self.recognizer.recognize_google(audio)
+                if text:
+                    print(f"Transcription successful: {text[:100] if len(text) > 100 else text}")
                 return text
         except sr.UnknownValueError:
+            print("Warning: Speech recognition could not understand audio")
+            print("This might mean audio is too quiet, unclear, or contains no speech")
             return ""
-        except sr.RequestError:
-            # Fallback: return empty string if API fails
+        except sr.RequestError as e:
+            print(f"Warning: Speech recognition service error: {e}")
+            print("Check your internet connection (Google Speech Recognition requires internet)")
             return ""
-        except Exception:
+        except Exception as e:
+            print(f"Error during transcription: {e}")
             return ""
     
     def analyze(self, audio_path: str) -> SpeechDisfluencyMetrics:

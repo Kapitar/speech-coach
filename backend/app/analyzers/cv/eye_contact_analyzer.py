@@ -56,9 +56,10 @@ class EyeContactAnalyzer:
         
         return avg_gaze_x, avg_gaze_y
     
-    def is_looking_at_camera(self, gaze_x: float, gaze_y: float, threshold: float = 0.05) -> bool:
+    def is_looking_at_camera(self, gaze_x: float, gaze_y: float, threshold: float = 0.03) -> bool:
         """Determine if person is looking at camera based on gaze direction"""
         # If gaze is close to center (0, 0), looking at camera
+        # Using stricter threshold (0.03 instead of 0.05)
         return abs(gaze_x) < threshold and abs(gaze_y) < threshold
     
     def analyze(self, video_path: str) -> EyeContactMetrics:
@@ -90,10 +91,39 @@ class EyeContactAnalyzer:
                 
                 if results.multi_face_landmarks:
                     landmarks = results.multi_face_landmarks[0].landmark
-                    gaze_x, gaze_y = self.estimate_gaze_direction(landmarks, frame.shape)
-                    is_looking = self.is_looking_at_camera(gaze_x, gaze_y)
+                    total_frames += 1  # Count frame with detected face
                     
-                    total_frames += 1
+                    # Check if iris landmarks exist and are valid
+                    try:
+                        left_iris = landmarks[468]  # Left iris center
+                        right_iris = landmarks[473]  # Right iris center
+                        
+                        # Validate iris visibility and positions
+                        if (left_iris.visibility > 0.5 and right_iris.visibility > 0.5 and
+                            left_iris.x > 0 and left_iris.x < 1 and
+                            right_iris.x > 0 and right_iris.x < 1):
+                            
+                            gaze_x, gaze_y = self.estimate_gaze_direction(landmarks, frame.shape)
+                            
+                            # Check head orientation (nose should be near face center)
+                            nose = landmarks[1]  # Nose tip
+                            face_left = landmarks[234].x  # Left face edge
+                            face_right = landmarks[454].x  # Right face edge
+                            face_center_x = (face_left + face_right) / 2
+                            
+                            # Person should be facing forward
+                            head_orientation_ok = abs(nose.x - face_center_x) < 0.15
+                            
+                            # Use stricter threshold
+                            is_looking = (self.is_looking_at_camera(gaze_x, gaze_y, threshold=0.03) and 
+                                         head_orientation_ok)
+                        else:
+                            # Iris not visible or invalid - assume not looking at camera
+                            is_looking = False
+                            
+                    except (IndexError, AttributeError):
+                        # Iris landmarks not available - assume not looking
+                        is_looking = False
                     
                     if is_looking:
                         eye_contact_frames += 1
@@ -107,13 +137,28 @@ class EyeContactAnalyzer:
                     if prev_looking is not None and prev_looking != is_looking:
                         gaze_shifts += 1
                     prev_looking = is_looking
+                else:
+                    # No face detected - definitely not making eye contact
+                    # Don't increment total_frames here - only count frames where face is detected
+                    if prev_looking:
+                        gaze_shifts += 1
+                    prev_looking = False
             
             frame_count += 1
         
+        # Add final eye contact duration if still looking at end
+        if current_duration > 0:
+            eye_contact_durations.append(current_duration / (fps / frame_interval))
+        
         cap.release()
         
-        # Calculate metrics
-        eye_contact_percentage = (eye_contact_frames / total_frames * 100) if total_frames > 0 else 0
+        # Calculate metrics - use frames with face detected as denominator
+        # If no face was detected, eye contact is 0%
+        if total_frames > 0:
+            eye_contact_percentage = (eye_contact_frames / total_frames * 100)
+        else:
+            eye_contact_percentage = 0.0  # No face detected = no eye contact possible
+        
         avg_eye_contact_duration = np.mean(eye_contact_durations) if eye_contact_durations else 0
         
         # Calculate gaze shifts per minute
@@ -126,14 +171,19 @@ class EyeContactAnalyzer:
         
         # Generate feedback
         feedback = []
-        if eye_contact_percentage < 60:
+        if total_frames == 0:
+            feedback.append("No face detected in video. Ensure you're visible and well-lit.")
+        elif eye_contact_percentage < 40:
+            feedback.append(f"Your eye contact is very low at {eye_contact_percentage:.1f}%. Look directly at the camera more often.")
+        elif eye_contact_percentage < 60:
             feedback.append(f"Your eye contact is {eye_contact_percentage:.1f}%. Aim for 70-80% for better engagement.")
+        
         if gaze_shifts_per_min > 20:
             feedback.append(f"You shift your gaze {gaze_shifts_per_min:.1f} times per minute. Try to maintain eye contact for 3-5 seconds.")
-        if avg_eye_contact_duration < 2:
+        if avg_eye_contact_duration < 2 and eye_contact_durations:
             feedback.append("Your eye contact durations are brief. Practice holding eye contact longer.")
         
-        if not feedback:
+        if not feedback and eye_contact_percentage > 0:
             feedback.append("Excellent eye contact! You're engaging well with your audience.")
         
         return EyeContactMetrics(
