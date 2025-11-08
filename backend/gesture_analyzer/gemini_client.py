@@ -38,46 +38,67 @@ class GeminiAnalysisClient:
     
     def _create_analysis_prompt(self) -> str:
         """Create the prompt for Gemini API gesture and posture analysis.
-        
+
         Returns:
             Prompt string for analysis
         """
-        return """Analyze the speaker's gestures and body posture in this video segment. 
-Provide a detailed analysis in JSON format with the following structure:
+        return """You are an expert presentation coach. Analyze the speaker's gestures and body posture in this video.
 
+Return valid JSON with the following structure:
 {
   "gesture_analysis": {
     "hand_movements": {
-      "frequency": "low/medium/high",
-      "types_identified": ["list", "of", "gesture", "types"],
+      "frequency": "low|medium|high",
+      "types_identified": ["array of gesture labels"],
       "effectiveness_score": 1-10,
-      "observations": ["specific observations about hand movements"]
+      "observations": ["key overall observations about hand use"]
     },
     "gesture_variety": 1-10,
-    "gesture_timing": "well-timed/poorly-timed/mixed"
+    "gesture_timing": "well-timed|poorly-timed|mixed",
+    "timestamped_feedback": [
+      {
+        "time_range": "MM:SS-MM:SS",
+        "summary": "short summary of what happens in this interval",
+        "details": ["bullet style feedback about gestures in this interval"]
+      }
+    ]
   },
   "posture_analysis": {
-    "stance": "open/closed/neutral",
-    "body_alignment": "good/fair/poor",
+    "stance": "open|closed|neutral",
+    "body_alignment": "good|fair|poor",
     "posture_score": 1-10,
-    "confidence_indicators": ["list of confidence indicators"],
-    "observations": ["specific observations about posture"]
+    "confidence_indicators": ["list confidence signals"],
+    "observations": ["overall notes on posture"],
+    "timestamped_feedback": [
+      {
+        "time_range": "MM:SS-MM:SS",
+        "summary": "posture feedback for this interval",
+        "details": ["specific posture observations and tips"]
+      }
+    ]
   },
   "coordination": {
     "gesture_posture_alignment": 1-10,
-    "overall_coherence": "description"
+    "overall_coherence": "narrative explaining how gestures and posture work together",
+    "timestamped_feedback": [
+      {
+        "time_range": "MM:SS-MM:SS",
+        "summary": "coordination feedback for this interval",
+        "details": ["points about synchrony between gestures, posture, and messaging"]
+      }
+    ]
   },
-  "segment_score": 1-10,
-  "strengths": ["list of strengths"],
-  "weaknesses": ["list of weaknesses"]
+  "overall_feedback": {
+    "strengths": ["list of top strengths"],
+    "areas_to_improve": ["list of top improvement areas"],
+    "action_items": ["three actionable suggestions"]
+  }
 }
 
-Focus on:
-1. Hand movements: pointing, open palms, closed fists, hand positions, gesture frequency and clarity
-2. Body posture: stance (open/closed), shoulder position, body alignment, leaning, balance
-3. Effectiveness: how well gestures support the message, posture confidence, overall presentation quality
-
-Provide specific, actionable observations and rate each aspect on a scale of 1-10."""
+Guidelines:
+- Always include at least 2 timestamped feedback entries per category when possible.
+- Timestamps should cover the most significant moments; estimate times if exact cues are unavailable.
+- Keep responses concise, specific, and actionable."""
     
     def _extract_frames(self, video_path: str, max_frames: int = 8) -> List:
         """Extract representative frames from the video."""
@@ -172,23 +193,56 @@ Provide specific, actionable observations and rate each aspect on a scale of 1-1
                     "observations": [text[:200]]  # First 200 chars as observation
                 },
                 "gesture_variety": 5,
-                "gesture_timing": "mixed"
+                "gesture_timing": "mixed",
+                "timestamped_feedback": []
             },
             "posture_analysis": {
                 "stance": "neutral",
                 "body_alignment": "fair",
                 "posture_score": 5,
                 "confidence_indicators": [],
-                "observations": [text[:200]]
+                "observations": [text[:200]],
+                "timestamped_feedback": []
             },
             "coordination": {
                 "gesture_posture_alignment": 5,
-                "overall_coherence": "average"
+                "overall_coherence": "average",
+                "timestamped_feedback": []
+            },
+            "overall_feedback": {
+                "strengths": [],
+                "areas_to_improve": [],
+                "action_items": []
             },
             "segment_score": 5,
             "strengths": [],
             "weaknesses": []
         }
+
+    @staticmethod
+    def _ensure_timestamp_fields(analysis_json: Dict[str, Any]) -> None:
+        """Ensure timestamped feedback arrays exist for each category."""
+        categories = [
+            "gesture_analysis",
+            "posture_analysis",
+            "coordination",
+        ]
+
+        for category in categories:
+            section = analysis_json.setdefault(category, {})
+            if "timestamped_feedback" not in section or not isinstance(
+                section.get("timestamped_feedback"), list
+            ):
+                section["timestamped_feedback"] = []
+
+        analysis_json.setdefault(
+            "overall_feedback",
+            {
+                "strengths": [],
+                "areas_to_improve": [],
+                "action_items": [],
+            },
+        )
     
     def analyze_entire_video(self, video_path: str) -> Dict[str, Any]:
         """Analyze an entire video using the Gemini API."""
@@ -228,6 +282,9 @@ Provide specific, actionable observations and rate each aspect on a scale of 1-1
             
             response_text = response.text
             analysis_json = self._parse_response(response_text)
+
+            # Ensure timestamp fields exist even if the model omitted them
+            self._ensure_timestamp_fields(analysis_json)
             
             # Ensure required fields exist
             if 'gesture_analysis' not in analysis_json:

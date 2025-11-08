@@ -7,8 +7,14 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 
-# Add parent directory to path to import gesture_analyzer
-sys.path.append(str(Path(__file__).parent.parent))
+# Add backend directory to path to import gesture_analyzer
+backend_dir = Path(__file__).parent
+project_root = backend_dir.parent
+
+for path in (backend_dir, project_root):
+    path_str = str(path)
+    if path_str not in sys.path:
+        sys.path.append(path_str)
 
 from gesture_analyzer import GestureAnalyzer
 

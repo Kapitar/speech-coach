@@ -48,14 +48,19 @@ class GestureAnalyzer:
             # Minimal flow: analyze the entire video as a single segment.
             analysis = self.gemini_client.analyze_entire_video(video_path)
 
-            # Ensure recommendations field exists for compatibility with previous response shape.
-            analysis.setdefault(
-                "recommendations",
-                [
-                    "Review the feedback above and practice refining your gestures and posture "
-                    "based on the highlighted observations."
-                ],
-            )
+            overall_feedback = analysis.get("overall_feedback", {})
+            action_items = overall_feedback.get("action_items") if isinstance(overall_feedback, dict) else None
+
+            if action_items:
+                analysis["recommendations"] = action_items
+            else:
+                analysis.setdefault(
+                    "recommendations",
+                    [
+                        "Review the feedback above and practice refining your gestures and posture "
+                        "based on the highlighted observations."
+                    ],
+                )
 
             return analysis
 
