@@ -15,8 +15,7 @@ analyzer = SpeechAnalyzer()
 
 @router.post("/video", response_model=FeedbackResponse)
 async def analyze_video(
-    video: UploadFile = File(..., description="Video file to analyze"),
-    audio: UploadFile = File(None, description="Optional separate audio file")
+    video: UploadFile = File(..., description="Video file to analyze")
 ):
     """
     Analyze a speech video and return structured feedback following the general_prompt.txt schema.
@@ -28,7 +27,6 @@ async def analyze_video(
     - overall_feedback: summary, strengths, areas_to_improve, prioritized_actions
     """
     video_path = None
-    audio_path = None
     
     try:
         # Save uploaded video
@@ -37,17 +35,10 @@ async def analyze_video(
             shutil.copyfileobj(video.file, buffer)
         logger.info(f"Saved video to {video_path}")
         
-        # Save audio if provided
-        if audio:
-            audio_path = UPLOADS_DIR / f"audio_{audio.filename}"
-            with audio_path.open("wb") as buffer:
-                shutil.copyfileobj(audio.file, buffer)
-            logger.info(f"Saved audio to {audio_path}")
-        
         # Analyze
         feedback = await analyzer.analyze_video(
             str(video_path),
-            str(audio_path) if audio_path else None
+            None
         )
         
         return JSONResponse(content=feedback)
@@ -62,5 +53,3 @@ async def analyze_video(
         # Cleanup
         if video_path and video_path.exists():
             video_path.unlink()
-        if audio_path and audio_path.exists():
-            audio_path.unlink()
