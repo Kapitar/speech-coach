@@ -5,32 +5,20 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from app.routers import analyze, chat
+# Add parent directory to path to import gesture_analyzer
+sys.path.append(str(Path(__file__).parent.parent))
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+from gesture_analyzer import GestureAnalyzer
 
-app = FastAPI(
-    title="Speech Coach API",
-    description="AI-powered speech analysis and coaching centered on comprehensive feedback",
-    version="2.0.0"
-)
+app = FastAPI(title="Speech Coach API", version="1.0.0")
 
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Restrict in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Initialize the gesture analyzer (will raise error if API key not set)
+try:
+    analyzer = GestureAnalyzer()
+except ValueError as e:
+    print(f"Warning: GestureAnalyzer initialization failed: {e}")
+    analyzer = None
 
-# Include routers
-app.include_router(analyze.router)
-app.include_router(chat.router)
 
 @app.get("/")
 async def root():
