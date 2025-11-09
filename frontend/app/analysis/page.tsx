@@ -19,7 +19,7 @@ function AnalysisContent() {
   const [feedback, setFeedback] = useState<FeedbackResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'replay' | 'chat'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'replay' | 'chat'>('replay');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [chatInput, setChatInput] = useState('');
@@ -469,16 +469,6 @@ function AnalysisContent() {
         {/* Tabs */}
         <div className="flex gap-2 mb-6 justify-center">
           <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`px-6 py-2 rounded-xl transition-all duration-300 font-medium ${
-              activeTab === 'dashboard'
-                ? 'bg-white text-black'
-                : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
-            }`}
-          >
-            Dashboard
-          </button>
-          <button
             onClick={() => setActiveTab('replay')}
             className={`px-6 py-2 rounded-xl transition-all duration-300 font-medium ${
               activeTab === 'replay'
@@ -487,6 +477,16 @@ function AnalysisContent() {
             }`}
           >
             Replay
+          </button>
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`px-6 py-2 rounded-xl transition-all duration-300 font-medium ${
+              activeTab === 'dashboard'
+                ? 'bg-white text-black'
+                : 'bg-white/5 text-white border border-white/10 hover:bg-white/10'
+            }`}
+          >
+            Dashboard
           </button>
           <button
             onClick={() => setActiveTab('chat')}
@@ -499,6 +499,84 @@ function AnalysisContent() {
             Chat
           </button>
         </div>
+
+        {/* Replay Tab */}
+        {activeTab === 'replay' && (
+          <div className="space-y-4">
+            <div className="rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 p-4">
+              <h2 className="text-sm text-white/70 mb-3 font-medium uppercase tracking-wide">Video Replay</h2>
+              {videoUrl ? (
+                <div className="relative rounded-lg overflow-hidden bg-black/20 aspect-video mb-4">
+                  <video
+                    ref={videoRef}
+                    src={videoUrl}
+                    controls
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="relative rounded-lg overflow-hidden bg-black/20 aspect-video flex items-center justify-center border border-white/10 mb-4">
+                  <p className="text-white/40 text-sm">No video available</p>
+                </div>
+              )}
+
+              {/* Timestamped Feedback */}
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {timestampedFeedback.length > 0 ? (
+                  timestampedFeedback.map((tf, idx) => {
+                    const { start, end } = parseTimeRange(tf.timeRange);
+                    const categoryColor = getCategoryColor(tf.category);
+                    // Format time as MM:SS
+                    const formatTime = (seconds: number): string => {
+                      const mins = Math.floor(seconds / 60);
+                      const secs = Math.floor(seconds % 60);
+                      return `${mins}:${String(secs).padStart(2, '0')}`;
+                    };
+                    
+                    return (
+                      <div
+                        key={idx}
+                        className={`${categoryColor.bg} rounded-lg p-4 border ${categoryColor.border} hover:border-opacity-50 transition-all duration-300 cursor-pointer`}
+                        onClick={() => {
+                          if (videoRef.current) {
+                            videoRef.current.currentTime = start;
+                            videoRef.current.play();
+                          }
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-shrink-0">
+                            <div className={`w-12 h-12 rounded-full ${categoryColor.circleBg} border ${categoryColor.circleBorder} flex items-center justify-center`}>
+                              <span className={`${categoryColor.text} font-medium text-xs`}>
+                                {formatTime(start)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex-1 space-y-2 min-w-0">
+                            <div>
+                              <div className="text-xs text-white/50 mb-1 font-medium uppercase tracking-wide">
+                                {tf.category} - {tf.subCategory}
+                              </div>
+                              <ul className="space-y-1">
+                                {tf.details.map((detail, detailIdx) => (
+                                  <li key={detailIdx} className="text-white/80 leading-relaxed font-light text-xs">
+                                    • {detail}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-white/40 text-sm text-center py-4">No timestamped feedback available</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
@@ -864,84 +942,6 @@ function AnalysisContent() {
                   )}
                 </div>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* Replay Tab */}
-        {activeTab === 'replay' && (
-          <div className="space-y-4">
-            <div className="rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 p-4">
-              <h2 className="text-sm text-white/70 mb-3 font-medium uppercase tracking-wide">Video Replay</h2>
-              {videoUrl ? (
-                <div className="relative rounded-lg overflow-hidden bg-black/20 aspect-video mb-4">
-                  <video
-                    ref={videoRef}
-                    src={videoUrl}
-                    controls
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="relative rounded-lg overflow-hidden bg-black/20 aspect-video flex items-center justify-center border border-white/10 mb-4">
-                  <p className="text-white/40 text-sm">No video available</p>
-                </div>
-              )}
-
-              {/* Timestamped Feedback */}
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {timestampedFeedback.length > 0 ? (
-                  timestampedFeedback.map((tf, idx) => {
-                    const { start, end } = parseTimeRange(tf.timeRange);
-                    const categoryColor = getCategoryColor(tf.category);
-                    // Format time as MM:SS
-                    const formatTime = (seconds: number): string => {
-                      const mins = Math.floor(seconds / 60);
-                      const secs = Math.floor(seconds % 60);
-                      return `${mins}:${String(secs).padStart(2, '0')}`;
-                    };
-                    
-                    return (
-                      <div
-                        key={idx}
-                        className={`${categoryColor.bg} rounded-lg p-4 border ${categoryColor.border} hover:border-opacity-50 transition-all duration-300 cursor-pointer`}
-                        onClick={() => {
-                          if (videoRef.current) {
-                            videoRef.current.currentTime = start;
-                            videoRef.current.play();
-                          }
-                        }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0">
-                            <div className={`w-12 h-12 rounded-full ${categoryColor.circleBg} border ${categoryColor.circleBorder} flex items-center justify-center`}>
-                              <span className={`${categoryColor.text} font-medium text-xs`}>
-                                {formatTime(start)}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex-1 space-y-2 min-w-0">
-                            <div>
-                              <div className="text-xs text-white/50 mb-1 font-medium uppercase tracking-wide">
-                                {tf.category} - {tf.subCategory}
-                              </div>
-                              <ul className="space-y-1">
-                                {tf.details.map((detail, detailIdx) => (
-                                  <li key={detailIdx} className="text-white/80 leading-relaxed font-light text-xs">
-                                    • {detail}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p className="text-white/40 text-sm text-center py-4">No timestamped feedback available</p>
-                )}
-              </div>
             </div>
           </div>
         )}
