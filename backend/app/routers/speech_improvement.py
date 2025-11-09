@@ -241,3 +241,62 @@ async def clone_voice_and_improve_detailed(
         # Cleanup
         if audio_path and audio_path.exists():
             audio_path.unlink()
+
+
+@router.post("/generate-from-video")
+async def generate_ideal_speech_from_video(
+    video: UploadFile = File(..., description="Video file to extract audio from and improve"),
+    improvement_focus: Optional[str] = Form(default="", description="Optional focus areas for improvement (e.g., 'clarity', 'pacing'). Leave empty for general improvement"),
+    language_code: Optional[str] = Form(default="", description="Language code (e.g., 'eng', 'spa') or leave empty for auto-detect"),
+    diarize: bool = Form(default=False, description="Whether to annotate who is speaking"),
+    tag_audio_events: bool = Form(default=False, description="Tag audio events like laughter, applause, etc.")
+):
+    """
+    Accept a VIDEO file, extract audio, then run the complete speech improvement workflow.
+    
+    Returns JSON with transcription, improved content, and audio as base64.
+    This endpoint is designed for frontend compatibility.
+    """
+    video_path = None
+    audio_path = None
+    
+    try:
+        # Save uploaded video
+        video_path = UPLOADS_DIR / f"video_{video.filename}"
+        with video_path.open("wb") as buffer:
+            shutil.copyfileobj(video.file, buffer)
+        logger.info(f"Saved video to {video_path}")
+        
+        # Extract audio from video
+        audio_path = await elevenlabs_service.extract_audio_from_video(str(video_path))
+        logger.info(f"Extracted audio to {audio_path}")
+        
+        # Run full workflow with optional parameters
+        result = await elevenlabs_service.full_speech_improvement_workflow(
+            audio_path,
+            normalize_optional_string(improvement_focus),
+            language_code=normalize_language_code(language_code),
+            diarize=diarize,
+            tag_audio_events=tag_audio_events
+        )
+        
+        import base64
+        audio_base64 = base64.b64encode(result["improved_audio_bytes"]).decode('utf-8')
+        
+        return JSONResponse(content={
+            "original_transcription": result["original_transcription"],
+            "improved_content": result["improved_content"],
+            "audio_generated": True,
+            "audio_size": result["audio_size"],
+            "audio_base64": audio_base64
+        })
+        
+    except Exception as e:
+        logger.error(f"Generate from video workflow failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Workflow failed: {str(e)}")
+    finally:
+        # Cleanup
+        if video_path and video_path.exists():
+            video_path.unlink()
+        if audio_path and Path(audio_path).exists():
+            Path(audio_path).unlink()

@@ -47,7 +47,8 @@ async def root():
                 "transcribe": "/speech/transcribe - Transcribe audio to text",
                 "improve": "/speech/improve - Transcribe and improve speech content",
                 "clone_and_improve": "/speech/clone-and-improve - Full workflow: transcribe, improve, clone voice, generate audio",
-                "clone_and_improve_detailed": "/speech/clone-and-improve-detailed - Same as above with detailed JSON response"
+                "clone_and_improve_detailed": "/speech/clone-and-improve-detailed - Same as above with detailed JSON response",
+                "generate_from_video": "/speech/generate-from-video - Accept video, extract audio, then run full improvement workflow"
             }
         }
     }

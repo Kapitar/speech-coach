@@ -21,6 +21,54 @@ class ElevenLabsService:
         self.client = ElevenLabs(api_key=ELEVENLABS_API_KEY)
         self.gemini_client = genai.Client(api_key=GOOGLE_AI_STUDIO_API_KEY)
         
+    async def extract_audio_from_video(self, video_path: str) -> str:
+        """
+        Extract audio from video file and save as MP3.
+        
+        Args:
+            video_path: Path to the video file
+            
+        Returns:
+            Path to the extracted audio file
+        """
+        try:
+            from pydub import AudioSegment
+            import shutil
+            
+            # Check if FFmpeg is installed
+            if not shutil.which('ffmpeg') and not shutil.which('ffprobe'):
+                error_msg = (
+                    "FFmpeg is not installed or not in PATH. "
+                    "Please install FFmpeg:\n"
+                    "  macOS: brew install ffmpeg\n"
+                    "  Ubuntu/Debian: sudo apt-get install ffmpeg\n"
+                    "  Windows: Download from https://ffmpeg.org/download.html"
+                )
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+            
+            logger.info(f"Extracting audio from video: {video_path}")
+            
+            # Extract audio using pydub
+            video = AudioSegment.from_file(video_path)
+            
+            # Generate audio path
+            video_path_obj = Path(video_path)
+            audio_path = str(video_path_obj.parent / f"audio_{video_path_obj.stem}.mp3")
+            
+            # Export as MP3
+            video.export(audio_path, format="mp3")
+            
+            logger.info(f"Audio extracted successfully: {audio_path}")
+            return audio_path
+            
+        except RuntimeError:
+            # Re-raise our custom FFmpeg error
+            raise
+        except Exception as e:
+            logger.error(f"Failed to extract audio from video: {e}")
+            raise RuntimeError(f"Audio extraction failed: {str(e)}")
+    
     async def transcribe_audio(
         self, 
         audio_path: str,

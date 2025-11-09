@@ -10,7 +10,7 @@ import {
   startChat,
   sendChatMessage,
   generateIdealSpeech,
-} from '../lib/api';
+} from '@/lib/api';
 
 function AnalysisContent() {
   const router = useRouter();

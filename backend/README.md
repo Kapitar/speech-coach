@@ -46,6 +46,10 @@ backend/
 
 ## Prerequisites
 - Python 3.10+
+- **FFmpeg** (required for video/audio processing)
+  - macOS: `brew install ffmpeg`
+  - Ubuntu/Debian: `sudo apt-get install ffmpeg`
+  - Windows: Download from [ffmpeg.org](https://ffmpeg.org/download.html)
 - A Google AI Studio API key (Gemini)
   - Set in `.env` as `GOOGLE_AI_STUDIO_API_KEY`
 - **🆕 An ElevenLabs API key** (for speech improvement features)
@@ -53,19 +57,24 @@ backend/
   - Voice cloning requires paid plan (Starter $5/month+)
 
 ## Setup (macOS)
-1) Create and activate a virtual environment
+1) Install FFmpeg (if not already installed)
+```bash
+brew install ffmpeg
+```
+
+2) Create and activate a virtual environment
 ```bash
 cd /Users/jasonoh/Desktop/Coding/GitHub/speech-coach/backend
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-2) Install dependencies
+3) Install Python dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-3) Configure environment
+4) Configure environment
 ```bash
 cp .env.example .env
 # Edit .env and set:

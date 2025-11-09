@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { analyzeVideo, type FeedbackResponse } from './lib/api';
+import { analyzeVideo, type AnalysisResponse } from '@/lib/api';
 
 export default function Home() {
   const router = useRouter();
